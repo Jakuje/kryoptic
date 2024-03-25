@@ -3848,8 +3848,21 @@ fn test_key() {
         ulParameterLen: 0,
     };
 
+    // get the length
+    let mut wrapped_len = 0;
+    ret = fn_wrap_key(
+        session,
+        &mut mechanism,
+        handle,
+        prikey,
+        std::ptr::null_mut(),
+        &mut wrapped_len,
+    );
+    assert_eq!(ret, CKR_OK);
+    // RSA private key is DER encoded and then AES encoded, length is rounded to block size
+    assert_eq!(wrapped_len, 1216);
+
     let mut wrapped = vec![0u8; 65536];
-    let mut wrapped_len = wrapped.len() as CK_ULONG;
 
     ret = fn_wrap_key(
         session,
@@ -3910,7 +3923,20 @@ fn test_key() {
         pParameter: std::ptr::null_mut(),
         ulParameterLen: 0,
     };
-    let mut wrapped_len = wrapped.len() as CK_ULONG;
+
+    // get the length
+    let mut wrapped_len = 0;
+    ret = fn_wrap_key(
+        session,
+        &mut mechanism,
+        pubkey,
+        handle,
+        std::ptr::null_mut(),
+        &mut wrapped_len,
+    );
+    assert_eq!(ret, CKR_OK);
+    // RSA modulus size
+    assert_eq!(wrapped_len, 256);
 
     ret = fn_wrap_key(
         session,
