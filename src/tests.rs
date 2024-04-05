@@ -1045,8 +1045,17 @@ fn test_create_ec_objects() {
 }
 
 #[test]
-fn test_init_token() {
-    let mut testdata = TestData::new("test_init_token.sql");
+fn test_init_token_json() {
+    test_init_token("test_init_token.json");
+}
+
+#[test]
+fn test_init_token_sql() {
+    test_init_token("test_init_token.sql");
+}
+
+fn test_init_token(name: &str) {
+    let mut testdata = TestData::new(name);
 
     let mut args = testdata.make_init_args();
     let args_ptr = &mut args as *mut CK_C_INITIALIZE_ARGS;
