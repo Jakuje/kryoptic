@@ -6,6 +6,7 @@ use crate::error::Result;
 use crate::interface::*;
 use crate::kasn1::DerEncOctetString;
 use crate::object::Object;
+use crate::ossl::common::EvpPkey;
 
 type Version = u64;
 
@@ -43,4 +44,18 @@ pub fn ec_key_check_import(obj: &mut Object) -> Result<()> {
     bytes_attr_not_empty!(obj; CKA_EC_PARAMS);
     bytes_attr_not_empty!(obj; CKA_VALUE);
     Ok(())
+}
+
+pub trait EccPrivKeyObject {
+    fn get_derive_output_length(&self) -> Result<usize> {
+        return Err(CKR_GENERAL_ERROR)?;
+    }
+
+    fn get_pkey(&self) -> Result<EvpPkey> {
+        return Err(CKR_GENERAL_ERROR)?;
+    }
+
+    fn make_peer_pkey(&self, _: &Vec<u8>) -> Result<EvpPkey> {
+        return Err(CKR_GENERAL_ERROR)?;
+    }
 }

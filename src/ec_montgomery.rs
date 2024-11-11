@@ -9,6 +9,7 @@ use crate::error::Result;
 use crate::interface::*;
 use crate::mechanism::*;
 use crate::object::*;
+use crate::ossl::common::EvpPkey;
 use crate::ossl::ec_montgomery::*;
 use crate::{attr_element, bytes_attr_not_empty};
 
@@ -127,6 +128,20 @@ impl ObjectFactory for ECMontgomeryPrivFactory {
         template: &[CK_ATTRIBUTE],
     ) -> Result<Object> {
         PrivKeyFactory::import_from_wrapped(self, data, template)
+    }
+}
+
+impl EccPrivKeyObject for Object {
+    fn get_derive_output_length(&self) -> Result<usize> {
+        make_output_length_from_montgomery_obj(self)
+    }
+
+    fn get_pkey(&self) -> Result<EvpPkey> {
+        montgomery_object_to_ecc_private_key(self)
+    }
+
+    fn make_peer_pkey(&self, ec_point: &Vec<u8>) -> Result<EvpPkey> {
+        make_ec_montgomery_public_key(self, ec_point)
     }
 }
 

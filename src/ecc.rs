@@ -10,7 +10,8 @@ use crate::interface::*;
 use crate::kasn1::PrivateKeyInfo;
 use crate::mechanism::*;
 use crate::object::*;
-use crate::ossl::ecc::EccOperation;
+use crate::ossl::common::*;
+use crate::ossl::ecc::*;
 use crate::{attr_element, bytes_attr_not_empty};
 
 use asn1;
@@ -127,13 +128,13 @@ pub fn ec_key_curve_size(key: &Object) -> Result<usize> {
 }
 
 #[derive(Debug)]
-pub struct ECCPubFactory {
+pub struct ECDSAPubFactory {
     attributes: Vec<ObjectAttr>,
 }
 
-impl ECCPubFactory {
-    pub fn new() -> ECCPubFactory {
-        let mut data: ECCPubFactory = ECCPubFactory {
+impl ECDSAPubFactory {
+    pub fn new() -> ECDSAPubFactory {
+        let mut data: ECDSAPubFactory = ECDSAPubFactory {
             attributes: Vec::new(),
         };
         data.attributes.append(&mut data.init_common_object_attrs());
@@ -148,7 +149,7 @@ impl ECCPubFactory {
     }
 }
 
-impl ObjectFactory for ECCPubFactory {
+impl ObjectFactory for ECDSAPubFactory {
     fn create(&self, template: &[CK_ATTRIBUTE]) -> Result<Object> {
         let obj = self.default_object_create(template)?;
 
@@ -163,18 +164,18 @@ impl ObjectFactory for ECCPubFactory {
     }
 }
 
-impl CommonKeyFactory for ECCPubFactory {}
+impl CommonKeyFactory for ECDSAPubFactory {}
 
-impl PubKeyFactory for ECCPubFactory {}
+impl PubKeyFactory for ECDSAPubFactory {}
 
 #[derive(Debug)]
-pub struct ECCPrivFactory {
+pub struct ECDSAPrivFactory {
     attributes: Vec<ObjectAttr>,
 }
 
-impl ECCPrivFactory {
-    pub fn new() -> ECCPrivFactory {
-        let mut data: ECCPrivFactory = ECCPrivFactory {
+impl ECDSAPrivFactory {
+    pub fn new() -> ECDSAPrivFactory {
+        let mut data: ECDSAPrivFactory = ECDSAPrivFactory {
             attributes: Vec::new(),
         };
         data.attributes.append(&mut data.init_common_object_attrs());
@@ -208,7 +209,7 @@ impl ECCPrivFactory {
     }
 }
 
-impl ObjectFactory for ECCPrivFactory {
+impl ObjectFactory for ECDSAPrivFactory {
     fn create(&self, template: &[CK_ATTRIBUTE]) -> Result<Object> {
         let mut obj = self.default_object_create(template)?;
 
@@ -249,9 +250,9 @@ fn get_oid_from_obj(key: &Object) -> Result<asn1::ObjectIdentifier> {
     }
 }
 
-impl CommonKeyFactory for ECCPrivFactory {}
+impl CommonKeyFactory for ECDSAPrivFactory {}
 
-impl PrivKeyFactory for ECCPrivFactory {
+impl PrivKeyFactory for ECDSAPrivFactory {
     fn export_for_wrapping(&self, key: &Object) -> Result<Vec<u8>> {
         key.check_key_ops(CKO_PRIVATE_KEY, CKK_EC, CKA_EXTRACTABLE)?;
 
@@ -341,11 +342,25 @@ impl PrivKeyFactory for ECCPrivFactory {
     }
 }
 
+impl EccPrivKeyObject for Object {
+    fn get_derive_output_length(&self) -> Result<usize> {
+        make_output_length_from_ecdsa_obj(self)
+    }
+
+    fn get_pkey(&self) -> Result<EvpPkey> {
+        ecdsa_object_to_ecc_private_key(self)
+    }
+
+    fn make_peer_pkey(&self, ec_point: &Vec<u8>) -> Result<EvpPkey> {
+        make_ecdsa_public_key(&get_curve_name_from_obj(self)?, &ec_point)
+    }
+}
+
 static PUBLIC_KEY_FACTORY: Lazy<Box<dyn ObjectFactory>> =
-    Lazy::new(|| Box::new(ECCPubFactory::new()));
+    Lazy::new(|| Box::new(ECDSAPubFactory::new()));
 
 static PRIVATE_KEY_FACTORY: Lazy<Box<dyn ObjectFactory>> =
-    Lazy::new(|| Box::new(ECCPrivFactory::new()));
+    Lazy::new(|| Box::new(ECDSAPrivFactory::new()));
 
 #[derive(Debug)]
 pub struct EccMechanism {
