@@ -1,5 +1,5 @@
 [workspace]
-members = ["ossl", "cdylib", "tools"]
+members = ["ossl", "ossl-sys", "cdylib", "tools"]
 default-members = [".", "ossl", "cdylib"]
 
 [workspace.package]
@@ -99,7 +99,7 @@ simplekdf = []
 sqlitedb = ["dep:rusqlite", "aes", "hkdf", "pbkdf2"]
 nssdb = ["dep:rusqlite", "aes", "hmac", "pbkdf2"]
 
-default = ["standard", "dynamic"]
+default = ["standard", "openssl-sys"]
 
 ecc_min = ["ecdsa", "ecdh"]
 ecc_all = ["ecc_min", "ec_montgomery", "eddsa"]

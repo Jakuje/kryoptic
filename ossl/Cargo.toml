@@ -21,6 +21,7 @@ libc = "0.2.151"
 log = { version = "0.4.27", default-features = false, features = ["std"], optional = true }
 vsprintf = { version = "2.0.0", optional = true }
 openssl-sys = { version = "0.9", features = ["bindgen"], optional = true }
+ossl-sys = { version = "1.5.1", optional = true, path = "../ossl-sys" }
 
 [dev-dependencies]
 hex = "0.4.3"
@@ -32,12 +33,9 @@ default = ["openssl-sys"]
 ossl320 = [] # Requires at a minimum OpenSSL 3.2.0
 ossl350 = [] # Requires at a minimum OpenSSL 3.5.0
 ossl400 = [] # Requires at minimum OpenSSL 4.0
+
 openssl-sys = ["dep:openssl-sys"]
-dynamic = [] # Builds against system libcrypto.so
-fips = ["ossl350"] # Builds against sources and libfips.a instead of libcrypto
+dynamic = ["ossl-sys/dynamic"] # Builds against system libcrypto.so
+fips = ["ossl350", "ossl-sys/fips"] # Builds against sources and libfips.a instead of libcrypto
 log = ["dep:log", "dep:vsprintf"] # Error tracing using log crate
 rfc9580 = [] # Enables features required for OpenPGP implementations
-
-[package.metadata.docs.rs]
-# slightly better chance of succeeding at building docs on a random machine
-features = ["dynamic"]

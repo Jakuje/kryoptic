@@ -15,7 +15,7 @@ pub mod bindings {
     #![allow(dead_code)]
     #![allow(non_snake_case)]
     #![allow(unnecessary_transmutes)]
-    include!(concat!(env!("OUT_DIR"), "/ossl_bindings.rs"));
+    pub use ossl_sys::*;
 }
 #[cfg(feature = "openssl-sys")]
 pub mod bindings {
