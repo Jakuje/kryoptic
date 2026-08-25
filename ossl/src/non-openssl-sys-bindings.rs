@@ -22,6 +22,7 @@ pub const OSSL_PKEY_PARAM_MGF1_DIGEST: &[u8; 12] = b"mgf1-digest\0";
 pub const OSSL_ASYM_CIPHER_PARAM_OAEP_DIGEST: &[u8; 7] = b"digest\0";
 
 // Digest
+pub const OSSL_DIGEST_NAME_RIPEMD160: &[u8; 10] = b"RIPEMD160\0";
 pub const OSSL_DIGEST_NAME_MD5: &[u8; 4] = b"MD5\0";
 pub const OSSL_DIGEST_NAME_SHA1: &[u8; 5] = b"SHA1\0";
 pub const OSSL_DIGEST_NAME_SHA2_224: &[u8; 9] = b"SHA2-224\0";
