@@ -1,0 +1,85 @@
+name: Build ossl
+
+on:
+  pull_request:
+    branches: ["main"]
+    paths:
+      - 'ossl/**'
+  push:
+    branches: ["main"]
+
+
+jobs:
+  build:
+    name: Build ossl
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        name: [minimal, all]
+        linking: [ossl-sys/dynamic, openssl-sys]
+
+    container: quay.io/fedora/fedora:latest
+    steps:
+      - name: Get Date for DNF cache entry
+        id: get-date
+        run: |
+          echo "date=$(/bin/date -u "+%Y%V")" >> $GITHUB_OUTPUT
+        shell: bash
+
+      - name: Restore DNF cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            /var/cache/libdnf5
+          key: ${{ runner.os }}-dnf-${{ steps.get-date.outputs.date }}
+
+      - name: Install Dependencies
+        run: |
+          dnf -y install git cargo clang-devel openssl openssl-devel rustfmt
+          if [ "${{ matrix.name }}" = "i686" ]; then
+            dnf -y install rust-std-static.i686 openssl-devel.i686 \
+              sqlite-devel.i686
+          fi
+
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+
+      - name: Generate lock file
+        run: cargo generate-lockfile
+
+      - name: Cache Rust dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build & test
+        run: |
+          FEATURES="${{ matrix.linking }}"
+          OPTS="--no-default-features"
+          export CC=clang
+
+          if [ "${{ matrix.name }}" = "all" ]; then
+            FEATURES="${FEATURES},rfc9580,log"
+          fi
+
+          cd ossl
+
+          #BUILD
+          cargo build -vv $OPTS --features "$FEATURES"
+
+          #TEST
+          cargo test -vv $OPTS --features "$FEATURES"
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: Build logs ${{ matrix.name }}-${{ matrix.linking }}
+          path: |
+            ossl/target/debug/build/*/output
